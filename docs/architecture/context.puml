@@ -1,0 +1,32 @@
+@startuml
+
+!include <C4/C4_Context>
+!include _context.puml
+
+title TO BE / AS IS — Диаграмма контекста
+
+left to right direction
+
+$users()
+
+System(cinemaAbyss, "Платформа 'Кинобездна'", "Онлайн-кинотеатр: каталог и стриминг фильмов, подписки и оплата, бонусы и промо-коды, персональные рекомендации.")
+
+$extDeps()
+
+Rel(user, cinemaAbyss, "Смотрит видео, управляет подпиской, оценивает контент", "HTTPS")
+Rel(operator, cinemaAbyss, "Управляет платформой", "HTTPS")
+
+Rel(cinemaAbyss, paymentSys, "Проводит оплату подписки", "HTTPS")
+Rel(paymentSys, cinemaAbyss, "Подтверждает платёж (webhook)", "HTTPS")
+Rel(cinemaAbyss, loyaltyManagementPlatform, "Начисляет и списывает бонусы; применяет промо-коды", "HTTPS")
+Rel(cinemaAbyss, marketplace, "Выставляет и продаёт подписки", "HTTPS")
+Rel(marketplace, cinemaAbyss, "Подтверждает продажу подписки (webhook)", "HTTPS")
+Rel(cinemaAbyss, recommendationSys, "Публикует события пользователя", "AMQP")
+Rel(recommendationSys, cinemaAbyss, "Публикует рекомендации", "AMQP")
+Rel(cinemaAbyss, contentProvider, "Получает видео", "HTTPS")
+Rel(cinemaAbyss, s3, "Загружает видео; запрашивает ссылки для просмотра видео", "HTTPS")
+Rel(cinemaAbyss, notificationProvider, "Запрашивает доставку email/push-уведомлений", "SMTP/HTTPS")
+
+SHOW_LEGEND()
+
+@enduml

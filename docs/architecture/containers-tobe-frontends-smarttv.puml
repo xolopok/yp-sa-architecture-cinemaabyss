@@ -1,0 +1,43 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: Smart TV BFF → сервисы
+
+left to right direction
+
+$user()
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $smartTvApp()
+  $smartTvBff()
+  $identitySvc()
+  $moviesSvcs()
+  $boundarySvcs()
+  $messagingSys()
+}
+
+Rel_D(user, smartTvApp, "Смотрит видео, управляет подпиской, оценивает контент", "HTTPS")
+
+Rel_D(smartTvApp, smartTvBff, "Отправляет запросы к API", "HTTPS")
+
+Rel_D(smartTvBff, moviesReadSvc, "Запрашивает каталог фильмов", "HTTPS/REST")
+Rel_D(smartTvBff, moviesWriteSvc, "Отправляет оценки фильмов", "HTTPS/REST")
+Rel_D(smartTvBff, recommendationSvc, "Запрашивает персональные рекомендации (ранжированные ID фильмов)", "HTTPS/REST")
+Rel_D(smartTvBff, subscriptionsSvc, "Управляет подписками", "HTTPS/REST")
+Rel_D(smartTvBff, paymentsSvc, "Инициирует оплату; запрашивает статусы платежей", "HTTPS/REST")
+Rel_D(smartTvBff, loyaltySvc, "Управляет бонусами и промо-кодами", "HTTPS/REST")
+Rel_D(smartTvBff, videoSvc, "Запрашивает временный URL для просмотра видео", "HTTPS/REST")
+Rel_D(smartTvBff, notificationSvc, "Запрашивает уведомления", "HTTPS/REST")
+
+Rel_D(smartTvApp, identitySvc, "Получает токен (OIDC)", "HTTPS")
+Rel_U(smartTvBff, identitySvc, "Запрашивает JWKS-ключи для валидации JWT", "HTTPS/OIDC")
+
+Rel_D(smartTvBff, messagingSys, "Публикует события активности пользователей (topic: user-activity)", "Kafka/produce")
+
+SHOW_LEGEND()
+
+@enduml

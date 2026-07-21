@@ -1,0 +1,40 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: Operator BFF → сервисы
+
+left to right direction
+
+$operator()
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $operatorApps()
+  $operatorWebBff()
+  $identitySvc()
+  $moviesWriteSvc()
+  $subscriptionsSvc()
+  $paymentsSvc()
+  $loyaltySvc()
+  $videoSvc()
+}
+
+Rel_D(operator, operatorWebApp, "Управляет платформой", "HTTPS")
+
+Rel_D(operatorWebApp, operatorWebBff, "Отправляет запросы к API", "HTTPS")
+
+Rel_D(operatorWebBff, moviesWriteSvc, "Управляет каталогом фильмов", "HTTPS/REST")
+Rel_D(operatorWebBff, subscriptionsSvc, "Управляет подписками пользователей", "HTTPS/REST")
+Rel_D(operatorWebBff, loyaltySvc, "Управляет промо-кодами и программами лояльности", "HTTPS/REST")
+Rel_D(operatorWebBff, videoSvc, "Управляет видеоконтентом", "HTTPS/REST")
+Rel_D(operatorWebBff, paymentsSvc, "Запрашивает статусы платежей", "HTTPS/REST")
+
+Rel_D(operatorWebApp, identitySvc, "Получает токен (OIDC)", "HTTPS")
+Rel_U(operatorWebBff, identitySvc, "Запрашивает JWKS-ключи для валидации JWT", "HTTPS/OIDC")
+
+SHOW_LEGEND()
+
+@enduml

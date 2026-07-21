@@ -1,0 +1,31 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: сервисы и базы данных
+
+left to right direction
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $identitySvc()
+  $moviesSvcs()
+  $boundarySvcs()
+  $sharedDb()
+}
+
+Rel_D(identitySvc, sharedDb, "Читает и записывает пользователей и учётные данные (БД keycloak)", "SQL")
+Rel_D(moviesWriteSvc, sharedDb, "Читает и записывает данные каталога (БД movies)", "SQL")
+Rel_D(moviesReadSvc, sharedDb, "Читает и обновляет упрощенную модель каталога для быстрого чтения (БД movies_read)", "SQL")
+Rel_D(recommendationSvc, sharedDb, "Сохраняет рекомендации (БД recommendations)", "SQL")
+Rel_D(subscriptionsSvc, sharedDb, "Читает и записывает подписки (БД subscriptions)", "SQL")
+Rel_D(paymentsSvc, sharedDb, "Читает и записывает платежи (БД payments)", "SQL")
+Rel_D(loyaltySvc, sharedDb, "Читает и записывает бонусы/промо-коды (БД loyalty)", "SQL")
+Rel_D(videoSvc, sharedDb, "Читает и записывает метаданные видео (БД video)", "SQL")
+Rel_D(notificationSvc, sharedDb, "Читает и записывает уведомления (БД notifications)", "SQL")
+
+SHOW_LEGEND()
+
+@enduml
