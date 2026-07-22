@@ -82,51 +82,44 @@ _По примеру из задания 2._
 
 ## Задание 2
 
-### 1. Proxy
-Команда КиноБездны уже выделила сервис метаданных о фильмах movies и вам необходимо реализовать бесшовный переход с применением паттерна Strangler Fig в части реализации прокси-сервиса (API Gateway), с помощью которого можно будет постепенно переключать трафик, используя фиче-флаг.
-Реализуйте сервис на любом языке программирования в ./src/microservices/proxy.
-Конфигурация для запуска сервиса через docker-compose уже добавлена
-```yaml
-  proxy-service:
-    build:
-      context: ./src/microservices/proxy
-      dockerfile: Dockerfile
-    container_name: cinemaabyss-proxy-service
-    depends_on:
-      - monolith
-      - movies-service
-      - events-service
-    ports:
-      - "8000:8000"
-    environment:
-      PORT: 8000
-      MONOLITH_URL: http://monolith:8080
-      #монолит
-      MOVIES_SERVICE_URL: http://movies-service:8081 #сервис movies
-      EVENTS_SERVICE_URL: http://events-service:8082
-      GRADUAL_MIGRATION: "true" # вкл/выкл простого фиче-флага
-      MOVIES_MIGRATION_PERCENT: "50" # процент миграции
-    networks:
-      - cinemaabyss-network
+_Я поднял версию Node до 22 и поправил скрипты. У меня не получилось запустить тесты как есть: yargs 17.6.2 падает на Node ≥ 20._
+
+_Я добавил bash-скрипты в `tests/scripts/` для быстрого тестирования без Node._
+
+**Сервис Proxy (C#, .NET 10)**
+
+Точка входа: `src/microservices/proxy/Program.cs`.
+
+Маршрутизация:
+- Не-movies трафик всегда идёт в монолит.
+- `/api/movies` и `/api/movies/*` маршрутизируются в сервис movies:
+  - `GRADUAL_MIGRATION=true`: случайное число `0–99 < MOVIES_MIGRATION_PERCENT`, то сервис movies, иначе монолит.
+  - `GRADUAL_MIGRATION=false`: весь movies-трафик идёт в movies-сервис.
+
+Тест:
+```bash
+curl http://localhost:8000/health        # Должен вернуть "Strangler Fig Proxy is healthy"
+curl http://localhost:8000/api/movies    # Должен вернуть список фильмов
 ```
 
-- После реализации запустите postman тесты - они все должны быть зеленые (кроме events).
-- Отправьте запросы к API Gateway:
-   ```bash
-   curl http://localhost:8000/api/movies
-   ```
-- Протестируйте постепенный переход, изменив переменную окружения `MOVIES_MIGRATION_PERCENT` в файле docker-compose.yml.
-### 2. Kafka
- Вам как архитектуру нужно также проверить гипотезу, насколько просто реализовать применение Kafka в данной архитектуре.
+Для проверки постепенного перехода нужно изменить `MOVIES_MIGRATION_PERCENT` в `docker-compose.yml` (0 — весь movies-трафик в монолит, 100 — весь в movies-сервис) и перезапустить `proxy-service`.
 
-Для этого нужно сделать MVP сервис events, который будет при вызове API создавать и сам же читать сообщения в топике Kafka.
+**Сервис Events (C#, .NET 10, Kafka)**
 
-    - Разработайте сервис на любом языке программирования с consumer'ами и producer'ами.
-    - Реализуйте простой API, при вызове которого будут создаваться события User/Payment/Movie и обрабатываться внутри сервиса с записью в лог
-    - Добавьте в docker-compose новый сервис, kafka там уже есть
+Точка входа: `src/microservices/proxy/Program.cs`.
 
-Необходимые тесты для проверки этого API вызываются при запуске `npm run test:local` из папки `tests/postman`.
-Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090.
+Тест:
+```bash
+cd tests/postman/
+npm run test:local
+```
+
+Отчёты в `tests/postman/reports/`.
+
+Скриншоты:
+
+![Тесты](task2_tests.png)
+![Топики Kafka](task2_topics.png)
 
 ## Задание 3
 
