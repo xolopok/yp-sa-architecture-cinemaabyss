@@ -154,3 +154,6 @@ go.work
 
 # Postman tests reports
 tests/postman/reports/
+
+# Local port-forward override for rootless use
+tests/postman/kubernetes.local.environment.json
