@@ -1,0 +1,44 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: промежуточное состояние миграции (Strangler Fig)
+
+left to right direction
+
+$users()
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $userApps()
+  $operatorApps()
+  $tmpSvcs()
+  $monolithSvc()
+  $sharedDb()
+}
+
+Rel_D(user, webApp, "Смотрит видео, управляет подпиской", "HTTPS")
+Rel_D(user, mobileApp, "Смотрит видео, управляет подпиской", "HTTPS")
+Rel_D(user, smartTvApp, "Смотрит видео, управляет подпиской", "HTTPS")
+
+Rel_D(operator, operatorWebApp, "Управляет платформой", "HTTPS")
+
+Rel_D(webApp, proxySvc, "Отправляет запросы к REST API", "HTTPS")
+Rel_D(mobileApp, proxySvc, "Отправляет запросы к REST API", "HTTPS")
+Rel_D(smartTvApp, proxySvc, "Отправляет запросы к REST API", "HTTPS")
+Rel_D(operatorWebApp, proxySvc, "Отправляет запросы к REST API", "HTTPS")
+
+Rel_D(proxySvc, monolith, "Проксирует трафик в монолит", "HTTPS")
+Rel_D(proxySvc, moviesSvc, "Проксирует movies-трафик в новый сервис", "HTTPS")
+
+Rel_L(moviesSvc, monolithAdapter, "Запрашивает legacy-данные/поведение, не мигрированные в сервис", "HTTPS")
+Rel_L(monolithAdapter, monolith, "Переводит контракт и модель данных в legacy-формат монолита", "HTTPS")
+
+Rel_D(monolith, sharedDb, "Читает и записывает данные: пользователи, подписки, бонусы/скидки, платежи, видео, метаданные фильмов", "SQL")
+Rel_D(moviesSvc, sharedDb, "Читает и записывает данные каталога (БД movies)", "SQL")
+
+SHOW_LEGEND()
+
+@enduml

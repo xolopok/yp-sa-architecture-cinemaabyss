@@ -1,0 +1,118 @@
+!include _context.puml
+
+!procedure $webApp()
+Container(webApp, "Web UI", "HTML/JS", "Веб-приложение.")
+!endprocedure
+
+!procedure $mobileApp()
+Container(mobileApp, "Mobile App", "Native", "Приложение для iOS/Android.")
+!endprocedure
+
+!procedure $smartTvApp()
+Container(smartTvApp, "Smart TV App", "Native", "Приложение для Tizen/webOS/Android TV.")
+!endprocedure
+
+!procedure $userApps()
+$webApp()
+$mobileApp()
+$smartTvApp()
+!endprocedure
+
+!procedure $operatorApps()
+Container(operatorWebApp, "Operator Web UI", "HTML/JS", "Веб-приложение для операторов платформы.")
+!endprocedure
+
+!procedure $monolithSvc()
+Container(monolith, "Монолит", "Go", "Существующее монолитное приложение.")
+!endprocedure
+
+!procedure $sharedDb()
+ContainerDb(sharedDb, "Общая БД", "PostgreSQL", "Общий PostgreSQL-кластер платформы. Изначально содержит БД монолита (остаётся до окончания миграции). Отдельная БД на сервис. Отдельная БД для Keycloak; остальные сервисы ссылаются на пользователей по user_id.")
+!endprocedure
+
+!procedure $identitySvc()
+Container(identitySvc, "Identity Service", "Keycloak, OIDC", "Аутентификация и авторизация пользователей и операторов.")
+!endprocedure
+
+!procedure $webBff()
+Container(webBff, "Web BFF", "Go", "Backend for Frontend для Web UI. Адаптирует контракты и объём данных под веб-приложение. Агрегирует вызовы доменных сервисов. Локально валидирует JWT (JWKS).")
+!endprocedure
+
+!procedure $mobileBff()
+Container(mobileBff, "Mobile BFF", "Go", "Backend for Frontend для Mobile App (iOS/Android). Адаптирует контракты и объём данных под мобильное приложение. Агрегирует вызовы доменных сервисов. Локально валидирует JWT (JWKS).")
+!endprocedure
+
+!procedure $smartTvBff()
+Container(smartTvBff, "Smart TV BFF", "Go", "Backend for Frontend для Smart TV App (Tizen/webOS/Android TV). Адаптирует контракты и объём данных под телевизионное приложение. Агрегирует вызовы доменных сервисов. Локально валидирует JWT (JWKS).")
+!endprocedure
+
+!procedure $operatorWebBff()
+Container(operatorWebBff, "Operator BFF", "Go", "Backend for Frontend для Operator Web UI. Адаптирует контракты и объём данных под операторский интерфейс. Агрегирует вызовы доменных сервисов. Локально валидирует JWT (JWKS).")
+!endprocedure
+
+!procedure $bffs()
+$webBff()
+$mobileBff()
+$smartTvBff()
+$operatorWebBff()
+!endprocedure
+
+!procedure $messagingSys()
+ContainerQueue(messagingSys, "Messaging System", "Apache Kafka", "Внутренняя система асинхронного обмена сообщениями.")
+!endprocedure
+
+!procedure $tmpSvcs()
+Container(proxySvc, "Proxy Service", "Go", "Временный фасад на период миграции (Strangler Fig): распределяет трафик между монолитом и сервисами. Делегирует аутентификацию и авторизацию монолиту до завершения миграции.")
+Container(moviesSvc, "Movies Service", "Go", "Мигрированная часть каталога фильмов: метаданные, жанры, рейтинги.")
+Container(monolithAdapter, "Monolith Adapter", "Go", "ACL против монолита на время миграции: предотвращает утечку legacy-модели.")
+!endprocedure
+
+!procedure $moviesWriteSvc()
+Container(moviesWriteSvc, "Movies Write Service", "Go", "[CQRS command-side] Управляет каталогом фильмов: создание и изменение метаданных. Источник истины для каталога фильмов.")
+!endprocedure
+
+!procedure $moviesReadSvc()
+Container(moviesReadSvc, "Movies Read Service", "Go", "[CQRS query-side] Обслуживает оптимизированный для чтения каталог фильмов для клиентов.")
+!endprocedure
+
+!procedure $moviesSvcs()
+$moviesWriteSvc()
+$moviesReadSvc()
+!endprocedure
+
+!procedure $recommendationSvc()
+Container(recommendationSvc, "Recommendation Service", "Go", "Потребляет события активности пользователей из внутреннего Kafka и публикует их во внешний RabbitMQ. Нормализует входящие рекомендации и публикует их во внутренний Kafka.")
+!endprocedure
+
+!procedure $subscriptionsSvc()
+Container(subscriptionsSvc, "Subscriptions Service", "Go", "Управляет подписками пользователей, их жизненным циклом и продажей через маркетплейс.")
+!endprocedure
+
+!procedure $paymentsSvc()
+Container(paymentsSvc, "Payments Service", "Go", "Обрабатывает платежи за подписки во внешней платёжной системе.")
+!endprocedure
+
+!procedure $loyaltySvc()
+Container(loyaltySvc, "Loyalty Service", "Go", "Управляет бонусами, промо-кодами и программами лояльности.")
+!endprocedure
+
+!procedure $videoSvc()
+Container(videoSvc, "Video Service", "Go", "Управляет видеоконтентом: получает видео от поставщика, загружает файлы в S3 и генерирует временный URL для скачивания/стриминга клиентами.")
+!endprocedure
+
+!procedure $notificationSvc()
+Container(notificationSvc, "Notification Service", "Go", "Формирует и доставляет уведомления. Уведомляет пользователей о событиях внутри платформы через внешнего email/push-провайдера.")
+!endprocedure
+
+!procedure $boundarySvcs()
+$recommendationSvc()
+$subscriptionsSvc()
+$paymentsSvc()
+$loyaltySvc()
+$videoSvc()
+$notificationSvc()
+!endprocedure
+
+!procedure $observability()
+Container(observabilitySrv, "Observability Server", "Grafana LGTM + OTel Collector", "Логи, метрики, трейсы и дашборды. Включает OTel Collector (приём OTLP) и стек Grafana LGTM (Loki, Grafana, Tempo, Mimir). Для упрощения показан одним контейнером.")
+!endprocedure

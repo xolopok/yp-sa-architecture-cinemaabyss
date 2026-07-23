@@ -16,9 +16,11 @@ services:
       - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
+    restart: on-failure
     networks:
       - cinemaabyss-network
 
@@ -28,6 +30,8 @@ services:
     container_name: cinemaabyss-zookeeper
     ports:
       - "2181:2181"
+    restart: on-failure
+    stop_signal: SIGKILL
     networks:
       - cinemaabyss-network
 
@@ -45,8 +49,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CREATE_TOPICS: "movie-events:1:1,user-events:1:1,payment-events:1:1"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    restart: on-failure
+    stop_signal: SIGKILL
     networks:
       - cinemaabyss-network
 
@@ -63,6 +67,7 @@ services:
     environment:
       PORT: 8080
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
+    restart: on-failure:5
     networks:
       - cinemaabyss-network
 
@@ -79,6 +84,7 @@ services:
     environment:
       PORT: 8081
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
+    restart: on-failure:5
     networks:
       - cinemaabyss-network
 
@@ -96,6 +102,7 @@ services:
     environment:
       PORT: 8082
       KAFKA_BROKERS: kafka:9092
+    restart: on-failure:5
     networks:
       - cinemaabyss-network
 
@@ -118,6 +125,7 @@ services:
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
       MOVIES_MIGRATION_PERCENT: "50"
+    restart: on-failure:5
     networks:
       - cinemaabyss-network
 
@@ -133,6 +141,7 @@ services:
       KAFKA_CLUSTERS_0_NAME: cinemaabyss
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: on-failure:5
     networks:
       - cinemaabyss-network
 

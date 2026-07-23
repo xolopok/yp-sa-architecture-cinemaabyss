@@ -1,0 +1,32 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: коммуникация между сервисами
+
+left to right direction
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $moviesSvcs()
+  $boundarySvcs()
+  $messagingSys()
+}
+
+Rel_D(recommendationSvc, messagingSys, "Публикует нормализованные рекомендации (topic: recommendations)", "Kafka/produce")
+Rel_D(moviesWriteSvc, messagingSys, "Публикует события добавления/обновления фильмов (topic: movie-events)", "Kafka/produce")
+Rel_D(subscriptionsSvc, messagingSys, "Публикует события подписок (topic: subscription-events)", "Kafka/produce")
+Rel_D(paymentsSvc, messagingSys, "Публикует платёжные события (topic: payment-events)", "Kafka/produce")
+Rel_D(loyaltySvc, messagingSys, "Публикует события начисления/списания бонусов (topic: loyalty-events)", "Kafka/produce")
+Rel_D(videoSvc, messagingSys, "Публикует события добавления/обновления видео (topic: video-events)", "Kafka/produce")
+
+Rel_U(messagingSys, recommendationSvc, "Доставляет события активности пользователей для передачи во внешнюю рекомендательную систему", "Kafka/consume")
+Rel_U(messagingSys, moviesReadSvc, "Доставляет события каталога (movie-events) для обновления read-модели", "Kafka/consume")
+Rel_U(messagingSys, subscriptionsSvc, "Доставляет PaymentSucceeded для активации подписки", "Kafka/consume")
+Rel_U(messagingSys, notificationSvc, "Доставляет события подписок/платежей/бонусов/видео и новые рекомендации для уведомлений", "Kafka/consume")
+
+SHOW_LEGEND()
+
+@enduml

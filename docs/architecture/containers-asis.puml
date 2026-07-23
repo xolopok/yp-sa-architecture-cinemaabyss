@@ -1,0 +1,47 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title AS IS — Диаграмма контейнеров
+
+left to right direction
+
+$users()
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $userApps()
+  $operatorApps()
+  $monolithSvc()
+  $sharedDb()
+}
+
+$extDeps()
+
+Rel_D(user, webApp, "Смотрит видео, управляет подпиской, оценивает контент", "HTTPS")
+Rel_D(user, mobileApp, "Смотрит видео, управляет подпиской, оценивает контент", "HTTPS")
+Rel_D(user, smartTvApp, "Смотрит видео, управляет подпиской, оценивает контент", "HTTPS")
+
+Rel_D(operator, operatorWebApp, "Управляет платформой", "HTTPS")
+
+Rel_D(webApp, monolith, "Отправляет запросы к REST API", "HTTPS")
+Rel_D(mobileApp, monolith, "Отправляет запросы к REST API", "HTTPS")
+Rel_D(smartTvApp, monolith, "Отправляет запросы к REST API", "HTTPS")
+Rel_D(operatorWebApp, monolith, "Отправляет запросы к REST API", "HTTPS")
+
+Rel_U(monolith, sharedDb, "Читает и записывает данные: пользователи, подписки, бонусы/скидки, платежи, видео, метаданные фильмов", "SQL")
+
+Rel_D(monolith, paymentSys, "Проводит оплату подписки", "HTTPS")
+Rel_D(monolith, loyaltyManagementPlatform, "Начисляет и списывает бонусы, применяет промо-коды", "HTTPS")
+Rel_D(monolith, marketplace, "Выставляет и продаёт подписки", "HTTPS")
+Rel_D(monolith, recommendationSys, "Отправляет события пользователя", "AMQP")
+Rel_U(recommendationSys, monolith, "Отправляет рекомендации", "AMQP")
+Rel_D(monolith, contentProvider, "Получает видео", "HTTPS")
+Rel_D(monolith, s3, "Загружает и скачивает видео", "HTTPS")
+Rel_D(monolith, notificationProvider, "Запрашивает доставку email/push-уведомлений", "SMTP/HTTPS")
+
+SHOW_LEGEND()
+
+@enduml

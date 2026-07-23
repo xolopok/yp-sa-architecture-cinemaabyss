@@ -1,0 +1,22 @@
+!procedure $user()
+Person(user, "Пользователь", "Пользователь платформы. Использует ноутбуки, smart TV, мобильные устройства.")
+!endprocedure
+
+!procedure $operator()
+Person(operator, "Оператор", "Внутренний оператор платформы. Обеспечивает работу платформы.")
+!endprocedure
+
+!procedure $users()
+$user()
+$operator()
+!endprocedure
+
+!procedure $extDeps()
+System_Ext(paymentSys, "Платёжная система", "Обрабатывает платежи за подписки.")
+System_Ext(loyaltyManagementPlatform, "Платформа лояльности", "Программы лояльности, промо-коды, бонусы.")
+System_Ext(marketplace, "Маркетплейс", "Площадка для распространения подписок.")
+System_Ext(recommendationSys, "Рекомендательная система", "Генерирует персональные рекомендации. Владеет собственным RabbitMQ.")
+System_Ext(contentProvider, "Поставщик контента", "Предоставляет видео для просмотра.")
+System_Ext(notificationProvider, "Email/Push провайдер", "Внешний сервис доставки уведомлений (email, push).")
+System_Ext(s3, "Объектное хранилище (S3)", "Объектное хранилище видеофайлов с S3-совместимым API.")
+!endprocedure

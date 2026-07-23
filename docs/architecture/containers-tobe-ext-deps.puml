@@ -1,0 +1,41 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: внешние зависимости
+
+left to right direction
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $userApps()
+  $boundarySvcs()
+}
+
+$extDeps()
+
+note bottom of s3
+    Временный подписанный URL выдаёт Video Service
+    через соответствующий BFF.
+end note
+
+Rel_U(webApp, s3, "Скачивает/стримит видео по временному URL", "HTTPS")
+Rel_U(mobileApp, s3, "Скачивает/стримит видео по временному URL", "HTTPS")
+Rel_U(smartTvApp, s3, "Скачивает/стримит видео по временному URL", "HTTPS")
+
+Rel_D(paymentsSvc, paymentSys, "Проводит оплату подписки", "HTTPS")
+Rel_U(paymentSys, paymentsSvc, "Подтверждает платёж (webhook)", "HTTPS")
+Rel_D(loyaltySvc, loyaltyManagementPlatform, "Начисляет и списывает бонусы; применяет промо-коды", "HTTPS")
+Rel_D(subscriptionsSvc, marketplace, "Выставляет и продаёт подписки", "HTTPS")
+Rel_U(marketplace, subscriptionsSvc, "Подтверждает продажу подписки (webhook)", "HTTPS")
+Rel_D(videoSvc, contentProvider, "Получает видео (метаданные и файлы)", "HTTPS")
+Rel_D(videoSvc, s3, "Загружает видео, генерирует временные URL для клиентов", "HTTPS")
+Rel_D(recommendationSvc, recommendationSys, "Публикует события пользователя", "AMQP")
+Rel_U(recommendationSys, recommendationSvc, "Публикует рекомендации", "AMQP")
+Rel_D(notificationSvc, notificationProvider, "Запрашивает доставку email/push-уведомлений", "SMTP/HTTPS")
+
+SHOW_LEGEND()
+
+@enduml

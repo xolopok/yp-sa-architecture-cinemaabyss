@@ -34,8 +34,8 @@ The tests cover the following services:
 
 ## Prerequisites
 
-- Node.js (v14 or later)
-- npm (v6 or later)
+- Node.js (v22 LTS or later)
+- npm (v10 or later)
 
 ## Installation
 

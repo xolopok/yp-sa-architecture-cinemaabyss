@@ -1,0 +1,45 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: Observability
+
+left to right direction
+
+$operator()
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $observability()
+  $bffs()
+  $identitySvc()
+  $moviesSvcs()
+  $boundarySvcs()
+  $sharedDb()
+  $messagingSys()
+}
+
+Rel(operator, observabilitySrv, "Просматривает дашборды, логи, трейсы", "HTTPS")
+
+Rel_D(webBff, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(mobileBff, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(smartTvBff, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(operatorWebBff, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(moviesWriteSvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(moviesReadSvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(recommendationSvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(subscriptionsSvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(paymentsSvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(loyaltySvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(videoSvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+Rel_D(notificationSvc, observabilitySrv, "Отправляет логи, трейсы, метрики", "OTLP")
+
+Rel_D(observabilitySrv, identitySvc, "Собирает метрики (Exporter/Prometheus)", "HTTP")
+Rel_D(observabilitySrv, sharedDb, "Собирает метрики (Exporter/Prometheus)", "HTTP")
+Rel_D(observabilitySrv, messagingSys, "Собирает метрики (Exporter/Prometheus)", "HTTP")
+
+SHOW_LEGEND()
+
+@enduml

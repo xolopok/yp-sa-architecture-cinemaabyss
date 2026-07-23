@@ -1,49 +1,21 @@
 const newman = require('newman');
 const fs = require('fs');
 const path = require('path');
-const yargs = require('yargs/yargs');
-const { hideBin } = require('yargs/helpers');
+const { parseArgs } = require('node:util');
 
 // Parse command line arguments
-const argv = yargs(hideBin(process.argv))
-  .option('environment', {
-    alias: 'e',
-    description: 'Environment to run tests against',
-    type: 'string',
-    default: 'local'
-  })
-  .option('collection', {
-    alias: 'c',
-    description: 'Collection to run',
-    type: 'string',
-    default: 'CinemaAbyss'
-  })
-  .option('folder', {
-    alias: 'f',
-    description: 'Specific folder in the collection to run',
-    type: 'string'
-  })
-  .option('reporters', {
-    alias: 'r',
-    description: 'Reporters to use (comma-separated)',
-    type: 'string',
-    default: 'cli,htmlextra,junit'
-  })
-  .option('bail', {
-    alias: 'b',
-    description: 'Stop on first error',
-    type: 'boolean',
-    default: false
-  })
-  .option('timeout', {
-    alias: 't',
-    description: 'Request timeout in ms',
-    type: 'number',
-    default: 10000
-  })
-  .help()
-  .alias('help', 'h')
-  .argv;
+const argv = parseArgs({
+  options: {
+    environment: { type: 'string', short: 'e', default: 'local' },
+    collection: { type: 'string', short: 'c', default: 'CinemaAbyss' },
+    folder: { type: 'string', short: 'f' },
+    reporters: { type: 'string', short: 'r', default: 'cli,htmlextra,junit' },
+    bail: { type: 'boolean', short: 'b', default: false },
+    timeout: { type: 'string', short: 't', default: '10000' },
+  },
+  strict: false,
+  allowPositionals: true,
+}).values;
 
 // Create reports directory if it doesn't exist
 const reportsDir = path.join(__dirname, 'reports');
@@ -66,8 +38,24 @@ if (!fs.existsSync(environmentPath)) {
   process.exit(1);
 }
 
-// Parse reporters
-const reporters = argv.reporters.split(',').map(r => r.trim());
+// Resolve reporters.
+const builtinReporters = new Set(['cli', 'json', 'junit', 'progress', 'silent']);
+const requestedReporters = argv.reporters.split(',').map(r => r.trim()).filter(Boolean);
+const reporters = requestedReporters.filter(name => {
+  if (builtinReporters.has(name)) return true;
+  try {
+    require.resolve(`newman-reporter-${name}`);
+    return true;
+  } catch {
+    console.warn(`Reporter '${name}' is not installed; skipping. Install with: npm i newman-reporter-${name}`);
+    return false;
+  }
+});
+if (reporters.length === 0) {
+  reporters.push('cli');
+}
+
+const timestamp = new Date().toISOString().replace(/:/g, '-');
 
 // Configure Newman options
 const newmanOptions = {
@@ -76,8 +64,7 @@ const newmanOptions = {
   reporters: reporters,
   reporter: {
     htmlextra: {
-      export: path.join(reportsDir, `report-${argv.environment}-${new Date().toISOString().replace(/:/g, '-')}.html`),
-      template: 'default',
+      export: path.join(reportsDir, `report-${argv.environment}-${timestamp}.html`),
       showOnlyFails: false,
       noSyntaxHighlighting: false,
       testPaging: true,
@@ -87,11 +74,11 @@ const newmanOptions = {
       omitHeaders: false
     },
     junit: {
-      export: path.join(reportsDir, `junit-report-${argv.environment}-${new Date().toISOString().replace(/:/g, '-')}.xml`)
+      export: path.join(reportsDir, `junit-report-${argv.environment}-${timestamp}.xml`)
     }
   },
   bail: argv.bail,
-  timeoutRequest: argv.timeout,
+  timeoutRequest: Number(argv.timeout) || 10000,
   delayRequest: 100 // Small delay between requests
 };
 
@@ -103,20 +90,20 @@ if (argv.folder) {
 // Run Newman
 console.log(`Running tests against ${argv.environment} environment...`);
 newman.run(newmanOptions, function (err, summary) {
-  if (err) { 
+  if (err) {
     console.error('Error running Newman:', err);
     process.exit(1);
   }
-  
+
   // Log results
   console.log('Newman run completed!');
-  
+
   const failureCount = summary.run.failures.length;
   console.log(`Total requests: ${summary.run.stats.requests.total}`);
   console.log(`Failed requests: ${summary.run.stats.requests.failed}`);
   console.log(`Total assertions: ${summary.run.stats.assertions.total}`);
   console.log(`Failed assertions: ${summary.run.stats.assertions.failed}`);
-  
+
   // Exit with appropriate code
   process.exit(failureCount > 0 ? 1 : 0);
 });

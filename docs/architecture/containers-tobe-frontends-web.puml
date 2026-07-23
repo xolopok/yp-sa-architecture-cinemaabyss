@@ -1,0 +1,43 @@
+@startuml
+
+!pragma layout smetana
+
+!include <C4/C4_Container>
+!include _containers.puml
+
+title TO BE — Диаграмма контейнеров: Web BFF → сервисы
+
+left to right direction
+
+$user()
+
+System_Boundary(cinemaAbyssBoundary, "Платформа 'Кинобездна'") {
+  $webApp()
+  $webBff()
+  $identitySvc()
+  $moviesSvcs()
+  $boundarySvcs()
+  $messagingSys()
+}
+
+Rel_D(user, webApp, "Смотрит видео, управляет подпиской, оценивает контент", "HTTPS")
+
+Rel_D(webApp, webBff, "Отправляет запросы к API", "HTTPS")
+
+Rel_D(webBff, moviesReadSvc, "Запрашивает каталог фильмов", "HTTPS/REST")
+Rel_D(webBff, moviesWriteSvc, "Отправляет оценки фильмов", "HTTPS/REST")
+Rel_D(webBff, recommendationSvc, "Запрашивает персональные рекомендации (ранжированные ID фильмов)", "HTTPS/REST")
+Rel_D(webBff, subscriptionsSvc, "Управляет подписками", "HTTPS/REST")
+Rel_D(webBff, paymentsSvc, "Инициирует оплату; запрашивает статусы платежей", "HTTPS/REST")
+Rel_D(webBff, loyaltySvc, "Управляет бонусами и промо-кодами", "HTTPS/REST")
+Rel_D(webBff, videoSvc, "Запрашивает временный URL для просмотра видео", "HTTPS/REST")
+Rel_D(webBff, notificationSvc, "Запрашивает уведомления", "HTTPS/REST")
+
+Rel_D(webApp, identitySvc, "Получает токен (OIDC)", "HTTPS")
+Rel_U(webBff, identitySvc, "Запрашивает JWKS-ключи для валидации JWT", "HTTPS/OIDC")
+
+Rel_D(webBff, messagingSys, "Публикует события активности пользователей (topic: user-activity)", "Kafka/produce")
+
+SHOW_LEGEND()
+
+@enduml
